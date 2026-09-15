@@ -6,6 +6,7 @@
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-D71F00?logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org/)
 [![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![JWT](https://img.shields.io/badge/Auth-JWT-000000?logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
+[![Tests](https://img.shields.io/badge/tests-13%20passed-brightgreen)](https://github.com/SmailsZX/task-tracker-api/actions)
 
 REST API для управления задачами с JWT-авторизацией. Учебный пет-проект: написан за один вечер, чтобы показать уверенное владение FastAPI, SQLAlchemy 2.0, PostgreSQL и Docker.
 
@@ -20,6 +21,7 @@ REST API для управления задачами с JWT-авторизац�
 - 🗄 **PostgreSQL 16** через SQLAlchemy 2.0 (typed Mapped API)
 - 🐳 **Docker + docker-compose** — запуск одной командой
 - 📖 **Автогенерируемая документация** — Swagger UI из коробки
+- 🧪 **13 тестов (pytest)** — авторизация и CRUD
 
 ---
 
@@ -33,6 +35,7 @@ REST API для управления задачами с JWT-авторизац�
 | Валидация | Pydantic v2 + pydantic-settings |
 | Аутентификация | JWT (python-jose) + bcrypt (passlib) |
 | ASGI-сервер | Uvicorn |
+| Тестирование | pytest 8.3 + httpx |
 | Контейнеризация | Docker + docker-compose |
 
 ---
@@ -57,6 +60,57 @@ docker compose up --build
 - 📖 **Swagger UI** — http://localhost:8000/docs
 - 📄 **ReDoc** — http://localhost:8000/redoc
 - ❤️ **Healthcheck** — http://localhost:8000/health
+
+---
+
+## 🧪 Тесты
+
+Проект покрыт тестами (pytest) — **13 тестов**.
+
+### Запуск
+
+```bash
+pytest tests/ -v
+```
+
+### Что покрыто
+
+**Авторизация (`tests/test_auth.py`):**
+- ✅ Регистрация пользователя
+- ✅ Регистрация с дублирующимся email
+- ✅ Успешный логин (JWT)
+- ✅ Логин с неверным паролем
+- ✅ Получение текущего пользователя (`/auth/me`)
+- ✅ Доступ без токена (401)
+
+**Задачи (`tests/test_tasks.py`):**
+- ✅ Создание задачи
+- ✅ Получение списка задач
+- ✅ Фильтрация по статусу
+- ✅ Обновление задачи (PATCH)
+- ✅ Удаление задачи
+- ✅ Задача не найдена (404)
+- ✅ Доступ без токена (401)
+
+### Как устроены тесты
+
+- **SQLite в памяти** — тесты не зависят от PostgreSQL.
+- **Фикстуры** (`conftest.py`):
+  - `client` — тестовый клиент с чистой БД для каждого теста.
+  - `auth_client` — клиент с JWT-токеном.
+- **Изоляция** — каждый тест получает чистую БД.
+
+### Пример
+
+```python
+def test_create_task(auth_client):
+    response = auth_client.post(
+        "/tasks",
+        json={"title": "Тестовая задача", "priority": "high"},
+    )
+    assert response.status_code == 201
+    assert response.json()["title"] == "Тестовая задача"
+```
 
 ---
 
@@ -175,6 +229,10 @@ task-tracker-api/
 │   └── routers/
 │       ├── auth.py          # /auth/* — регистрация и логин
 │       └── tasks.py         # /tasks/* — CRUD задач
+├── tests/                   # Тесты (pytest)
+│   ├── conftest.py          # Фикстуры
+│   ├── test_auth.py         # Тесты авторизации
+│   └── test_tasks.py        # Тесты задач
 ├── docs/                    # Скриншоты Swagger UI
 ├── Dockerfile               # Образ приложения
 ├── docker-compose.yml       # api + postgres
@@ -197,9 +255,9 @@ task-tracker-api/
 
 ## 🔮 Roadmap
 
-- [ ] **Alembic** — миграции вместо `Base.metadata.create_all`
-- [ ] **pytest + httpx** — тесты на auth и CRUD
+- [x] **pytest + httpx** — тесты на auth и CRUD (13 тестов)
 - [ ] **GitHub Actions** — CI: ruff + pytest на каждый push
+- [ ] **Alembic** — миграции вместо `Base.metadata.create_all`
 - [ ] **Пагинация с total** — `{items: [...], total: N}`
 - [ ] **Rate limit** на `/auth/login` через slowapi
 - [ ] **Refresh-токены** — длинные сессии без релогина
