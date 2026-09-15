@@ -6,7 +6,7 @@
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-D71F00?logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org/)
 [![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![JWT](https://img.shields.io/badge/Auth-JWT-000000?logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
-[![Tests](https://img.shields.io/badge/tests-13%20passed-brightgreen)](https://github.com/SmailsZX/task-tracker-api/actions)
+[![Tests](https://github.com/SmailsZX/task-tracker-api/actions/workflows/tests.yml/badge.svg)](https://github.com/SmailsZX/task-tracker-api/actions/workflows/tests.yml)
 
 REST API для управления задачами с JWT-авторизацией. Учебный пет-проект: написан за один вечер, чтобы показать уверенное владение FastAPI, SQLAlchemy 2.0, PostgreSQL и Docker.
 
@@ -256,7 +256,7 @@ task-tracker-api/
 ## 🔮 Roadmap
 
 - [x] **pytest + httpx** — тесты на auth и CRUD (13 тестов)
-- [ ] **GitHub Actions** — CI: ruff + pytest на каждый push
+- [x] **GitHub Actions** — CI: pytest на каждый push
 - [ ] **Alembic** — миграции вместо `Base.metadata.create_all`
 - [ ] **Пагинация с total** — `{items: [...], total: N}`
 - [ ] **Rate limit** на `/auth/login` через slowapi
