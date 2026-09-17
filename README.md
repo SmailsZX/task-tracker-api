@@ -4,6 +4,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-D71F00?logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org/)
+[![Alembic](https://img.shields.io/badge/Alembic-migrations-6BA81E?logo=alembic&logoColor=white)](https://alembic.sqlalchemy.org/)
 [![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![JWT](https://img.shields.io/badge/Auth-JWT-000000?logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
 [![Tests](https://github.com/SmailsZX/task-tracker-api/actions/workflows/tests.yml/badge.svg)](https://github.com/SmailsZX/task-tracker-api/actions/workflows/tests.yml)
@@ -19,9 +20,11 @@ REST API для управления задачами с JWT-авторизац�
 - 📝 **Полный CRUD** — создание, чтение, обновление, удаление задач
 - 🔍 **Фильтры и пагинация** — по статусу, приоритету, `skip`/`limit`
 - 🗄 **PostgreSQL 16** через SQLAlchemy 2.0 (typed Mapped API)
+- 🔄 **Alembic** — миграции схемы БД
 - 🐳 **Docker + docker-compose** — запуск одной командой
 - 📖 **Автогенерируемая документация** — Swagger UI из коробки
 - 🧪 **13 тестов (pytest)** — авторизация и CRUD
+- ⚙️ **CI/CD (GitHub Actions)** — автозапуск тестов
 
 ---
 
@@ -31,11 +34,13 @@ REST API для управления задачами с JWT-авторизац�
 |------|-----------|
 | Web-фреймворк | FastAPI 0.115 |
 | ORM | SQLAlchemy 2.0 |
+| Миграции | Alembic 1.14 |
 | База данных | PostgreSQL 16 |
 | Валидация | Pydantic v2 + pydantic-settings |
 | Аутентификация | JWT (python-jose) + bcrypt (passlib) |
 | ASGI-сервер | Uvicorn |
 | Тестирование | pytest 8.3 + httpx |
+| CI/CD | GitHub Actions |
 | Контейнеризация | Docker + docker-compose |
 
 ---
@@ -60,6 +65,42 @@ docker compose up --build
 - 📖 **Swagger UI** — http://localhost:8000/docs
 - 📄 **ReDoc** — http://localhost:8000/redoc
 - ❤️ **Healthcheck** — http://localhost:8000/health
+
+---
+
+## 🗄 Миграции (Alembic)
+
+Проект использует **Alembic** для управления схемой БД.
+
+### Применить миграции
+
+```bash
+alembic upgrade head
+```
+
+### Создать новую миграцию
+
+После изменения моделей (`app/models.py`):
+
+```bash
+alembic revision --autogenerate -m "описание изменений"
+alembic upgrade head
+```
+
+### Откатить
+
+```bash
+alembic downgrade -1    # на одну миграцию назад
+alembic downgrade base  # откатить всё
+```
+
+### Структура
+
+```
+alembic/
+├── versions/           # Файлы миграций
+└── env.py              # Конфигурация (URL из .env)
+```
 
 ---
 
@@ -223,21 +264,27 @@ task-tracker-api/
 │   ├── config.py            # Настройки через pydantic-settings
 │   ├── database.py          # Engine, SessionLocal, Base
 │   ├── models.py            # SQLAlchemy-модели (User, Task)
-│   ├── schemas.py           # Pydantic-схемы (валидация + сериализация)
+│   ├── schemas.py           # Pydantic-схемы
 │   ├── security.py          # bcrypt + JWT-хелперы
 │   ├── deps.py              # Зависимости (get_db, get_current_user)
 │   └── routers/
-│       ├── auth.py          # /auth/* — регистрация и логин
-│       └── tasks.py         # /tasks/* — CRUD задач
+│       ├── auth.py          # /auth/*
+│       └── tasks.py         # /tasks/*
+├── alembic/                 # Миграции (Alembic)
+│   ├── versions/            # Файлы миграций
+│   └── env.py               # Конфигурация
 ├── tests/                   # Тесты (pytest)
-│   ├── conftest.py          # Фикстуры
-│   ├── test_auth.py         # Тесты авторизации
-│   └── test_tasks.py        # Тесты задач
+│   ├── conftest.py
+│   ├── test_auth.py
+│   └── test_tasks.py
+├── .github/workflows/       # CI (GitHub Actions)
+│   └── tests.yml
 ├── docs/                    # Скриншоты Swagger UI
-├── Dockerfile               # Образ приложения
-├── docker-compose.yml       # api + postgres
-├── requirements.txt         # Python-зависимости
-├── .env.example             # Шаблон переменных окружения
+├── Dockerfile
+├── docker-compose.yml
+├── alembic.ini
+├── requirements.txt
+├── .env.example
 └── README.md
 ```
 
@@ -257,7 +304,7 @@ task-tracker-api/
 
 - [x] **pytest + httpx** — тесты на auth и CRUD (13 тестов)
 - [x] **GitHub Actions** — CI: pytest на каждый push
-- [ ] **Alembic** — миграции вместо `Base.metadata.create_all`
+- [x] **Alembic** — миграции вместо `Base.metadata.create_all`
 - [ ] **Пагинация с total** — `{items: [...], total: N}`
 - [ ] **Rate limit** на `/auth/login` через slowapi
 - [ ] **Refresh-токены** — длинные сессии без релогина
@@ -267,6 +314,7 @@ task-tracker-api/
 ## 📝 Заметки
 
 - **Почему `bcrypt==4.0.1`?** `passlib 1.7.4` несовместим с `bcrypt 4.1+` — падает на внутреннем тесте с `ValueError: password cannot be longer than 72 bytes`. Пин версии — самое простое решение. В проде лучше взять `argon2` или валидировать длину пароля в Pydantic-схеме.
+- **Alembic и ENUM.** При `alembic downgrade base` ENUM-типы (`taskstatus`, `taskpriority`) **не удаляются** автоматически. Если нужно откатить всё — удали их вручную: `DROP TYPE IF EXISTS taskstatus CASCADE;`
 
 ---
 

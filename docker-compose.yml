@@ -5,6 +5,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: tasks
+    ports:
+      - "5432:5432"        # ← ДОБАВЬ ЭТО
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -16,7 +18,7 @@ services:
     build: .
     env_file: .env
     ports:
-      - "8000:8000"
+      - "8000:8000"        # ← ЗАМЕНИ 5432 на 8000
     depends_on:
       db:
         condition: service_healthy
